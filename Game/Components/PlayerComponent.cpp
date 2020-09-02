@@ -2,6 +2,7 @@
 #include "PlayerComponent.h"
 #include "Components/PhysicsComponent.h"
 #include <Components\AudioComponent.h>
+#include "Components/SpriteComponent.h"
 
 namespace nc
 {
@@ -9,6 +10,9 @@ namespace nc
 void PlayerComponent::Create(void* data)
 {
 	m_owner = static_cast<GameObject*>(data);
+
+	EventManager::Instance().Subscribe("CollisionEnter", std::bind(&PlayerComponent::OnCollisionEnter, this, std::placeholders::_1), m_owner);
+	EventManager::Instance().Subscribe("CollisionExit", std::bind(&PlayerComponent::OnCollisionExit, this, std::placeholders::_1), m_owner);
 }
 
 void PlayerComponent::Destroy()
@@ -38,6 +42,7 @@ void PlayerComponent::Update()
 		AudioComponent* audioComponent = m_owner->GetComponent<AudioComponent>();
 		if (audioComponent)
 		{
+			audioComponent->SetSoundName("audio/Jump.wav");
 			audioComponent->Play();
 		}
 
@@ -46,14 +51,50 @@ void PlayerComponent::Update()
 	PhysicsComponent* component = m_owner->GetComponent<PhysicsComponent>();
 	if (component)
 	{
-		component->SetForce(force);
+		component->ApplyForce(force);
+
+		SpriteComponent* spriteComponent = m_owner->GetComponent<SpriteComponent>();
+		Vector2 velocity = component->GetVelocity();
+		if (velocity.x >= 0.5f) spriteComponent->Flip(false);
+		if (velocity.x <= -0.5f) spriteComponent->Flip();
+
 	}
 
 	//check collision
-	auto coinContacts = m_owner->GetContactsWithTag("Coin");
-	for (auto contact : coinContacts)
+	
+}
+void PlayerComponent::OnCollisionEnter(const Event& event)
+{
+	GameObject* gameObject = dynamic_cast<GameObject*>(event.sender);
+
+	if (gameObject->m_tag == "Enemy")
 	{
-		contact->m_flags[GameObject::eFlags::DESTROY] = true;
+		AudioComponent* audioComponent = m_owner->GetComponent<AudioComponent>();
+		audioComponent->SetSoundName("audio/Grunt.wav");
+		audioComponent->Play();
+		m_owner->m_flags[GameObject::eFlags::DESTROY] = true;
+
+		Event event;
+		event.type = "PlayerDead";
+		int score = 300;
+		event.data = &score;
+		EventManager::Instance().Notify(event);
 	}
+
+	if (gameObject->m_tag == "Coin")
+	{
+		AudioComponent* audioComponent = m_owner->GetComponent<AudioComponent>();
+		audioComponent->SetSoundName("audio/coin.wav");
+		audioComponent->Play();
+
+		gameObject->m_flags[GameObject::eFlags::DESTROY] = true;
+	}
+	//std::cout << "cllision enter: " << gameObject->m_name << std::endl;
+}
+void PlayerComponent::OnCollisionExit(const Event& event)
+{
+	GameObject* gameObject = dynamic_cast<GameObject*>(event.sender);
+
+	std::cout << "cllision exit: " << gameObject->m_name << std::endl;
 }
 }

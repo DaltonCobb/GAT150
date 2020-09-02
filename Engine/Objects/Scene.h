@@ -26,8 +26,11 @@ namespace nc
 		void RemoveGameObject(GameObject* gameObject);
 		void RemoveAllGameObjects();
 
-	protected:
+	public:
+
 		Engine* m_engine{ nullptr };
+
+	protected:
 		std::list<GameObject*> m_gameObjects;
 	};
 }

@@ -14,7 +14,7 @@ namespace nc
 
 		virtual void Update() override;
 
-		virtual void SetForce(const Vector2& force) override;
+		virtual void ApplyForce(const Vector2& force) override;
 
 	protected:
 		PhysicsSystem::RigidBodyData m_data;

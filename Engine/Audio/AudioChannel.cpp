@@ -9,8 +9,6 @@ bool AudioChannel::IsPlaying()
 	if (m_channel == nullptr )
 	{
 		m_channel->isPlaying(&isPlaying);
-		//<call the method isPlaying() on m_channel, pass in the address of the bool isPlaying>
-
 	} 
 	return isPlaying;
 }

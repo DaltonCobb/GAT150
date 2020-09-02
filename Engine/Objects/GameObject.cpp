@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "GameObject.h"
+#include "Scene.h"
 #include "Components/Component.h"
 #include "Components/RenderComponent.h"
 #include <Objects\ObjectFactory.h>
@@ -15,17 +16,19 @@ namespace nc
 
 		m_transform = other.m_transform;
 		m_engine = other.m_engine;
+		m_scene = other.m_scene;
 
 		for (auto component : other.m_components)
 		{
 			Component* clone = static_cast<Component*>(component->Clone());
-			clone->m_owner = this;
+			clone->Create(this);
 			AddComponent(clone);
 		}
 	}
 	void GameObject::Create(void* data)
 {
-	m_engine = static_cast<Engine*>(data);
+	m_scene = static_cast<Scene*>(data);
+	m_engine = m_scene->m_engine;
 }
 
 void GameObject::Destroy()
@@ -112,11 +115,25 @@ void GameObject::Draw()
 void GameObject::BeginContact(GameObject* other)
 {
 	m_contacts.push_back(other);
+
+	Event event;
+	event.sender = other;
+	event.receiver = this;
+	event.type = "CollisionEnter";
+
+	EventManager::Instance().Notify(event);
 }
 
 void GameObject::EndContact(GameObject* other)
 {
 	m_contacts.remove(other);
+
+	Event event;
+	event.sender = other;
+	event.receiver = this;
+	event.type = "CollisionExit";
+
+	EventManager::Instance().Notify(event);
 }
 
 std::vector<GameObject*> GameObject::GetContactsWithTag(const std::string& tag)

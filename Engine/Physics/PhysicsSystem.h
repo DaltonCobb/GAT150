@@ -13,6 +13,7 @@ namespace nc
 			float density{ 0 };
 			float friction{ 1 };
 			float restitution{ 0.3f };
+			float gravityScale{ 1 };
 			bool lockAngle{ false };
 			bool isDynamic{ false };
 			bool isSensor{ false };
